@@ -1,4 +1,4 @@
-const Course = require("../models/course");
+const Course = require("../models/course.model");
 
 function mapCartItems(cart) {
   return cart.items.map((c) => ({

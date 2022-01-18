@@ -1,4 +1,4 @@
-const User = require("../models/user");
+const User = require("../models/user.model");
 const bcrypt = require("bcryptjs");
 const regEmail = require("../emails/registration");
 const { validationResult } = require("express-validator");

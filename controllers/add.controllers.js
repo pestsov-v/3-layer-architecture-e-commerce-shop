@@ -1,5 +1,5 @@
 const { validationResult } = require("express-validator");
-const Course = require("../models/course");
+const Course = require("../models/course.model");
 
 const getAdd = (req, res) => {
   res.render("add", {
