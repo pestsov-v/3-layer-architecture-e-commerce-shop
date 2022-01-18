@@ -1,5 +1,4 @@
-const Course = require("../models/course.model");
-const { mapCartItems, computePrice } = require("../helpers/cart.helpers");
+const { computePrice } = require("../helpers/cart.helpers");
 const { getCart, postCart } = require("../services/cart.service");
 
 const getCard = async (req, res) => {

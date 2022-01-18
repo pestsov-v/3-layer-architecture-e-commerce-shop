@@ -6,7 +6,7 @@ const {
   postCard,
   getCard,
   deleteCard,
-} = require("../controllers/card.controllers");
+} = require("../controllers/cart.controllers");
 
 cardRouter.get("/", auth, getCard);
 cardRouter.post("/add", auth, postCard);
