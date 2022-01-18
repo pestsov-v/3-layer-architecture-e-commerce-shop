@@ -15,10 +15,10 @@ const ordersRoutes = require("./routes/orders.routes");
 const coursesRoutes = require("./routes/courses.routes");
 const authRoutes = require("./routes/auth.routes");
 const profileRoutes = require("./routes/profile.routes");
-const errorHanler = require("./midlleware/error");
-const varMiddleware = require("./midlleware/variables");
-const fileMiddleware = require("./midlleware/file");
-const UserMiddleware = require("./midlleware/user");
+const errorMiddleware = require("./middleware/error.middleware");
+const varMiddleware = require("./middleware/variables.midleware");
+const fileMiddleware = require("./middleware/file.middleware");
+const UserMiddleware = require("./middleware/user.midleware");
 const keys = require("./keys");
 
 const app = express();
@@ -78,7 +78,7 @@ app.use("/orders", ordersRoutes);
 app.use("/auth", authRoutes);
 app.use("/profile", profileRoutes);
 
-app.use(errorHanler);
+app.use(errorMiddleware);
 
 const PORT = process.env.PORT || 3000;
 

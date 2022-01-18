@@ -1,7 +1,7 @@
 const express = require("express");
 const addRouter = express.Router();
 const { courseValidators } = require("../utils/validators");
-const auth = require("../midlleware/auth");
+const auth = require("../middleware/auth.middleware");
 
 const { getAdd, postAdd } = require("../controllers/add.controllers");
 

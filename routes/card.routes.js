@@ -1,6 +1,6 @@
 const express = require("express");
 const cardRouter = express.Router();
-const auth = require("../midlleware/auth");
+const auth = require("../middleware/auth.middleware");
 
 const {
   postCard,
