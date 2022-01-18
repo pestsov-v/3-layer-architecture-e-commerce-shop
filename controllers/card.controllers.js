@@ -1,10 +1,9 @@
 const Course = require("../models/course.model");
 const { mapCartItems, computePrice } = require("../helpers/cart.helpers");
+const { getCart, postCart } = require("../services/cart.service");
 
 const getCard = async (req, res) => {
-  const user = await req.user.populate("cart.items.courseId").execPopulate();
-
-  const courses = mapCartItems(user.cart);
+  const courses = await getCart(req.user);
 
   res.render("card", {
     title: "Корзина",
@@ -15,15 +14,13 @@ const getCard = async (req, res) => {
 };
 
 const postCard = async (req, res) => {
-  const course = await Course.findById(req.body.id);
-  await req.user.addToCart(course);
+  await postCart(req.body, req.user);
   res.redirect("/card");
 };
 
 const deleteCard = async (req, res) => {
   await req.user.removeFromCart(req.params.id);
-  const user = await req.user.populate("cart.items.courseId").execPopulate();
-  const courses = mapCartItems(user.cart);
+  const courses = await getCart(req.user);
   const cart = {
     courses,
     price: computePrice(courses),
