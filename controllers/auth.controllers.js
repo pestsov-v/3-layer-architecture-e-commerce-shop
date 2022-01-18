@@ -1,18 +1,16 @@
-const User = require("../models/user.model");
 const bcrypt = require("bcryptjs");
 const regEmail = require("../emails/registration");
 const { validationResult } = require("express-validator");
-const nodemailer = require("nodemailer");
-const sendgrid = require("nodemailer-sendgrid-transport");
-const keys = require("../keys");
+const transporter = require("../services/email.service");
 const crypto = require("crypto");
 const resetEmail = require("../emails/reset");
-
-const transporter = nodemailer.createTransport(
-  sendgrid({
-    auth: { api_key: keys.SENDGRID_API_KEY },
-  })
-);
+const {
+  findUserEmailService,
+  comparePasswordService,
+  getToken,
+  findUserTokenInParams,
+  createNewUser,
+} = require("../services/auth.service");
 
 const getLogin = async (req, res) => {
   res.render("auth/login", {
@@ -25,11 +23,13 @@ const getLogin = async (req, res) => {
 
 const postLogin = async (req, res) => {
   try {
-    const { email, password } = req.body;
-    const candidate = await User.findOne({ email });
+    const candidate = await findUserEmailService(req.body);
 
     if (candidate) {
-      const areSame = await bcrypt.compare(password, candidate.password);
+      const areSame = await comparePasswordService(
+        req.body.password,
+        candidate
+      );
 
       if (areSame) {
         req.session.user = candidate;
@@ -61,23 +61,17 @@ const getLogout = async (req, res) => {
 
 const postRegister = async (req, res) => {
   try {
-    const { email, password, name } = req.body;
-
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
       req.flash("registerError", errors.array()[0].msg);
       return res.status(422).redirect("/auth/login#register");
     }
-    const hashPassword = await bcrypt.hash(password, 10);
-    const user = new User({
-      email,
-      name,
-      password: hashPassword,
-      cart: { items: [] },
-    });
+
+    const user = await createNewUser(req.body);
     await user.save();
+
     try {
-      await transporter.sendMail(regEmail(email));
+      await regEmail(req.body);
       res.redirect("/auth/login#login");
     } catch (e) {
       console.log(e);
@@ -96,14 +90,14 @@ const getReset = (req, res) => {
 
 const postReset = (req, res) => {
   try {
-    crypto.randomBytes(32, async (err, buffer) => {
+    callback = async (err, buffer) => {
       if (err) {
         req.flash("error", "Что-то пошло не так, повторите попытку позже");
         return res.redirect("/auth/reset");
       }
 
-      const token = buffer.toString("hex");
-      const candidate = await User.findOne({ email: req.body.email });
+      const token = getToken(buffer);
+      const candidate = await findUserEmailService(req.body);
 
       if (candidate) {
         candidate.resetToken = token;
@@ -115,7 +109,9 @@ const postReset = (req, res) => {
         req.flash("error", "Такого email нет");
         res.redirect("/auth/reset");
       }
-    });
+    };
+
+    crypto.randomBytes(32, callback);
   } catch (e) {
     console.log(e);
   }
@@ -127,10 +123,7 @@ const getPasswordToken = async (req, res) => {
   }
 
   try {
-    const user = await User.findOne({
-      resetToken: req.params.token,
-      resetTokenExp: { $gt: Date.now() },
-    });
+    const user = await findUserTokenInParams(req.params);
 
     if (!user) {
       return res.redirect("/auth/login");
@@ -149,11 +142,7 @@ const getPasswordToken = async (req, res) => {
 
 const postPassword = async (req, res) => {
   try {
-    const user = await User.findOne({
-      _id: req.body.userId,
-      resetToken: req.body.token,
-      resetTokenExp: { $gt: Date.now() },
-    });
+    const user = await findUserTokenInDatabase(req.body);
 
     if (user) {
       user.password = await bcrypt.hash(req.body.password, 10);

@@ -1,5 +1,8 @@
 const { validationResult } = require("express-validator");
-const Course = require("../models/course.model");
+const {
+  postAddService,
+  validationAddService,
+} = require("../services/add.service");
 
 const getAdd = (req, res) => {
   res.render("add", {
@@ -10,27 +13,19 @@ const getAdd = (req, res) => {
 
 const postAdd = async (req, res) => {
   const errors = validationResult(req);
+  const data = validationAddService(req.body);
+
   if (!errors.isEmpty()) {
     return res.status(422).render("add", {
       title: "Добавить курс",
       isAdd: true,
       error: errors.array()[0].msg,
-      data: {
-        title: req.body.title,
-        price: req.body.price,
-        img: req.body.img,
-      },
+      data,
     });
   }
 
-  const course = new Course({
-    title: req.body.title,
-    price: req.body.price,
-    img: req.body.img,
-    userId: req.user,
-  });
-
   try {
+    const course = await postAddService(req.body, req.user);
     await course.save();
     res.redirect("/courses");
   } catch (e) {
