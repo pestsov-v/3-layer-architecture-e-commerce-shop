@@ -1,12 +1,7 @@
-const {Router} = require('express')
-const router = Router()
+const express = require("express");
+const homeRouter = express.Router();
+const { getHome } = require("../controllers/home.controllers");
 
-router.get('/', (req, res) => {
-  res.render('index', {
-    title: 'Главная страница',
-    isHome: true
-  })
-})
+homeRouter.get("/", getHome);
 
-
-module.exports = router
+module.exports = homeRouter;

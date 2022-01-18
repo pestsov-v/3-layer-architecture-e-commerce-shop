@@ -1,34 +1,13 @@
-const {Router} = require('express')
-const auth = require('../midlleware/auth')
-const User = require('../models/user')
-const router = Router()
+const express = require("express");
+const router = express.Router();
+const auth = require("../midlleware/auth");
 
-router.get('/', auth, async (req, res) => {
-  res.render('profile', {
-    title: 'Профиль',
-    isProfile: true,
-    user: req.user
-  })
-})
+const {
+  getProfile,
+  postProfile,
+} = require("../controllers/profile.controllers");
 
-router.post('/', auth, async (req, res) => {
-  try {
-    const user = await User.findById(req.user._id)
+router.get("/", auth, getProfile);
+router.post("/", auth, postProfile);
 
-    const toChange = {
-      name: req.body.name
-    }
-
-    if (req.file) {
-      toChange.avatarUrl = req.file.path
-    }
-
-    Object.assign(user, toChange)
-    await user.save()
-    res.redirect('/profile')
-  } catch (e) {
-    console.log(e)
-  }
-})
-
-module.exports = router
+module.exports = router;
