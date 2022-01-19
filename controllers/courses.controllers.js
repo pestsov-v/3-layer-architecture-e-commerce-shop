@@ -1,11 +1,15 @@
 const Course = require("../models/course.model");
 const { validationResult } = require("express-validator");
+const {
+  getCoursesByDb,
+  getOneCourseByDb,
+  editOneCourseByDb,
+  deleteOneCourseByDb,
+} = require("../services/courses.service");
 
 const getCourses = async (req, res) => {
   try {
-    const courses = await Course.find()
-      .populate("userId", "email name")
-      .select("price title img");
+    const courses = await getCoursesByDb();
 
     res.render("courses", {
       title: "Курсы",
@@ -20,7 +24,7 @@ const getCourses = async (req, res) => {
 
 const getOneCourse = async (req, res) => {
   try {
-    const course = await Course.findById(req.params.id);
+    const course = await getOneCourseByDb(req.params);
     res.render("course", {
       layout: "empty",
       title: `Курс ${course.title}`,
@@ -36,7 +40,7 @@ const getEditOneCourse = async (req, res) => {
     return res.redirect("/");
   }
   try {
-    const course = await Course.findById(req.params.id);
+    const course = await getOneCourseByDb(req.params);
 
     if (course.userId.toString() !== req.user._id.toString()) {
       return res.redirect("/courses");
@@ -53,15 +57,14 @@ const getEditOneCourse = async (req, res) => {
 
 const postEditOneCourse = async (req, res) => {
   const errors = validationResult(req);
-  const { id } = req.body;
 
   if (!errors.isEmpty()) {
     return res.status(422).redirect(`/courses/${id}/edit?allow=true`);
   }
 
   try {
-    delete req.body.id;
-    const course = await Course.findById(id);
+    const course = await editOneCourseByDb(req.body);
+
     if (course.userId.toString() !== req.user._id.toString()) {
       res.redirect("/courses");
     }
@@ -75,10 +78,7 @@ const postEditOneCourse = async (req, res) => {
 
 const postRemoveOneCourse = async (req, res) => {
   try {
-    const course = await Course.deleteOne({
-      _id: req.body.id,
-      userId: req.user._id,
-    });
+    await deleteOneCourseByDb(req.body, req.user);
     res.redirect("/courses");
   } catch (e) {
     console.log(e);
