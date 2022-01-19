@@ -1,22 +1,21 @@
-const Order = require("../models/order.model");
+const {
+  getOrderList,
+  createUserCoursesCart,
+} = require("../helpers/orders.helpers");
+const {
+  findOrder,
+  getUserItems,
+  createNewOrder,
+} = require("../services/orders.service");
 
 const getOrders = async (req, res) => {
   try {
-    const orders = await Order.find({ "user.userId": req.user._id }).populate(
-      "user.userId"
-    );
+    const orders = await findOrder(req.user);
 
     res.render("orders", {
       isOrder: true,
       title: "Заказы",
-      orders: orders.map((o) => {
-        return {
-          ...o._doc,
-          price: o.courses.reduce((total, c) => {
-            return (total += c.count * c.course.price);
-          }, 0),
-        };
-      }),
+      orders: getOrderList(orders),
     });
   } catch (e) {
     console.log(e);
@@ -25,21 +24,9 @@ const getOrders = async (req, res) => {
 
 const postOrders = async (req, res) => {
   try {
-    const user = await req.user.populate("cart.items.courseId").execPopulate();
-
-    const courses = user.cart.items.map((i) => ({
-      count: i.count,
-      course: { ...i.courseId._doc },
-    }));
-
-    const order = new Order({
-      user: {
-        name: req.user.name,
-        userId: req.user,
-      },
-      courses: courses,
-    });
-
+    const user = await getUserItems(req.user);
+    const courses = createUserCoursesCart(user);
+    const order = createNewOrder(user, courses);
     await order.save();
     await req.user.clearCart();
 
