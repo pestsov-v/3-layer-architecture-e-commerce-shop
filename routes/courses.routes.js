@@ -10,7 +10,7 @@ const {
   getEditOneCourse,
   postEditOneCourse,
   postRemoveOneCourse,
-} = require("../controllers/courses.controllers");
+} = require("../services/courses.service");
 
 courseRouter.get("/", getCourses);
 courseRouter.get("/:id", getOneCourse);

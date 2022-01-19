@@ -1,20 +1,39 @@
-const Course = require("../models/course.model");
+const { validationResult } = require("express-validator");
+const {
+  postAddService,
+  validationAddService,
+} = require("../repositories/add.repositories");
 
-async function postAddService(body, user) {
-  return (course = new Course({
-    title: body.title,
-    price: body.price,
-    img: body.img,
-    userId: user,
-  }));
-}
-
-function validationAddService(body) {
-  return (data = {
-    title: body.title,
-    price: body.price,
-    img: body.img,
+const getAdd = (req, res) => {
+  res.render("add", {
+    title: "Добавить курс",
+    isAdd: true,
   });
-}
+};
 
-module.exports = { postAddService, validationAddService };
+const postAdd = async (req, res) => {
+  const errors = validationResult(req);
+  const data = validationAddService(req.body);
+
+  if (!errors.isEmpty()) {
+    return res.status(422).render("add", {
+      title: "Добавить курс",
+      isAdd: true,
+      error: errors.array()[0].msg,
+      data,
+    });
+  }
+
+  try {
+    const course = await postAddService(req.body, req.user);
+    await course.save();
+    res.redirect("/courses");
+  } catch (e) {
+    console.log(e);
+  }
+};
+
+module.exports = {
+  getAdd,
+  postAdd,
+};

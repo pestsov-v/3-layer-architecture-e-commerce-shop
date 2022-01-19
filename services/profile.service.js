@@ -1,22 +1,29 @@
-const User = require("../models/user.model");
-
-async function findUserById(user) {
-  return await User.findById(user._id);
-}
-
-function changeUserName(body, file) {
-  toChange = {
-    name: body.name,
-  };
-
-  if (file) {
-    toChange.avatarUrl = file.path;
-  }
-
-  return toChange;
-}
-
-module.exports = {
+const {
   findUserById,
   changeUserName,
+} = require("../repositories/profile.repositories");
+
+const getProfile = async (req, res) => {
+  res.render("profile", {
+    title: "Профиль",
+    isProfile: true,
+    user: req.user,
+  });
+};
+
+const postProfile = async (req, res) => {
+  try {
+    const user = await findUserById(req.user);
+    const toChange = changeUserName(req.body, req.file);
+    Object.assign(user, toChange);
+    await user.save();
+    res.redirect("/profile");
+  } catch (e) {
+    console.log(e);
+  }
+};
+
+module.exports = {
+  getProfile,
+  postProfile,
 };

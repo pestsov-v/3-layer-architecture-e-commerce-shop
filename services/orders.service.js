@@ -1,25 +1,42 @@
-const Order = require("../models/order.model");
-
-function findOrder(user) {
-  return Order.find({ "user.userId": user._id }).populate("user.userId");
-}
-
-async function getUserItems(user) {
-  return await user.populate("cart.items.courseId").execPopulate();
-}
-
-function createNewOrder(user, courses) {
-  return new Order({
-    user: {
-      name: user.name,
-      userId: user,
-    },
-    courses,
-  });
-}
-
-module.exports = {
+const {
+  getOrderList,
+  createUserCoursesCart,
+} = require("../helpers/orders.helpers");
+const {
   findOrder,
   getUserItems,
   createNewOrder,
+} = require("../repositories/orders.repositories");
+
+const getOrders = async (req, res) => {
+  try {
+    const orders = await findOrder(req.user);
+
+    res.render("orders", {
+      isOrder: true,
+      title: "Заказы",
+      orders: getOrderList(orders),
+    });
+  } catch (e) {
+    console.log(e);
+  }
+};
+
+const postOrders = async (req, res) => {
+  try {
+    const user = await getUserItems(req.user);
+    const courses = createUserCoursesCart(user);
+    const order = createNewOrder(user, courses);
+    await order.save();
+    await req.user.clearCart();
+
+    res.redirect("/orders");
+  } catch (e) {
+    console.log(e);
+  }
+};
+
+module.exports = {
+  getOrders,
+  postOrders,
 };

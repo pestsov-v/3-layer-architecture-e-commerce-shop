@@ -11,7 +11,7 @@ const {
   postReset,
   getPasswordToken,
   postPassword,
-} = require("../controllers/auth.controllers");
+} = require("../services/auth.service");
 
 authRouter.get("/login", getLogin);
 authRouter.post("/login", postLogin);
